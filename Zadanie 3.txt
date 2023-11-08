@@ -1,0 +1,84 @@
+using System;
+using System.Collections.Generic;
+using System.Xml;
+
+public class Event
+{
+    public string Date { get; set; }
+    public string Result { get; set; }
+    public string IpFrom { get; set; }
+    public string Method { get; set; }
+    public string UrlTo { get; set; }
+    public string Response { get; set; }
+}
+
+public class Log
+{
+    public List<Event> Events { get; set; }
+
+    public Log()
+    {
+        Events = new List<Event>();
+    }
+}
+
+public static class XmlConverter
+{
+    public static Log ConvertXmlToLog(string xml)
+    {
+        XmlDocument xmlDoc = new XmlDocument();
+        xmlDoc.LoadXml(xml);
+
+        XmlNodeList eventNodes = xmlDoc.GetElementsByTagName("event");
+
+        Log log = new Log();
+
+        foreach (XmlNode eventNode in eventNodes)
+        {
+            Event logEvent = new Event();
+            logEvent.Date = eventNode.Attributes["date"].Value;
+            logEvent.Result = eventNode.Attributes["result"].Value;
+            logEvent.IpFrom = eventNode.SelectSingleNode("ip-from").InnerText;
+            logEvent.Method = eventNode.SelectSingleNode("method").InnerText;
+            logEvent.UrlTo = eventNode.SelectSingleNode("url-to").InnerText;
+            logEvent.Response = eventNode.SelectSingleNode("response").InnerText;
+            log.Events.Add(logEvent);
+        }
+
+        return log;
+    }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        string xml = @"<log>
+                         <event date=""27/May/1999:02:32:46"" result=""success"">
+                             <ip-from>195.151.62.18</ip-from>
+                             <method>GET</method>
+                             <url-to>/mise/</url-to>
+                             <response>200</response>
+                         </event>
+                         <event date=""27/May/1999:02:41:47"" result=""success"">
+                             <ip-from>195.209.248.12</ip-from>
+                             <method>GET</method>
+                             <url-to>soft.htm</url-to>
+                             <response>200</response>
+                         </event>
+                     </log>";
+        
+        Log log = XmlConverter.ConvertXmlToLog(xml);
+        
+        foreach (Event logEvent in log.Events)
+        {
+            Console.WriteLine("Date: " + logEvent.Date);
+            Console.WriteLine("Result: " + logEvent.Result);
+            Console.WriteLine("IP From: " + logEvent.IpFrom);
+            Console.WriteLine("Method: " + logEvent.Method);
+            Console.WriteLine("URL To: " + logEvent.UrlTo);
+            Console.WriteLine("Response: " + logEvent.Response);
+            Console.WriteLine();
+        }
+    }
+}
